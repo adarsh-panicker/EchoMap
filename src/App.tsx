@@ -121,14 +121,6 @@ export function App() {
           const actualSr = await engine.start(proc.chirpRef.waveform, priSamples, outputGain, {
             onSampleRate: (sr) => {
               setSampleRate(sr);
-              if (sr !== sampleRate) {
-                proc = createProcessor(sr);
-                engine.updateConfig(
-                  proc.chirpRef.waveform,
-                  Math.round(PRI_SEC * sr),
-                  outputGain
-                );
-              }
             },
             onFrame: (frame) => {
               if (!processorRef.current) return;
@@ -139,6 +131,14 @@ export function App() {
             onError: (msg) => setErrorMsg(msg),
           });
           setSampleRate(actualSr);
+          if (actualSr !== sampleRate) {
+            proc = createProcessor(actualSr);
+            engine.updateConfig(
+              proc.chirpRef.waveform,
+              Math.round(PRI_SEC * actualSr),
+              outputGain
+            );
+          }
           setIsRunning(true);
         } catch {
           setIsRunning(false);
@@ -455,7 +455,7 @@ export function App() {
               <div className="metric-value mono">
                 {result?.estimatedBpm ? `${result.estimatedBpm} BPM` : '—'}
               </div>
-              <div className="metric-sub">6–60 BPM zero-crossing tracker</div>
+              <div className="metric-sub">6–45 BPM spectral peak tracker</div>
             </div>
 
             <div className="metric-card">
@@ -482,6 +482,7 @@ export function App() {
                 peakRangeCm={result?.peakRangeCm ?? 0}
                 sensitivityDb={sensitivityDb}
                 resetToken={resetToken}
+                frameTick={frameTick}
               />
             </div>
 
@@ -524,6 +525,7 @@ export function App() {
               displacementHistoryMm={result?.displacementHistoryMm ?? null}
               maxRangeM={MAX_RANGE_M}
               peakRangeCm={result?.peakRangeCm ?? 0}
+              frameTick={frameTick}
             />
           </section>
         </>

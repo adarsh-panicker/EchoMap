@@ -6,6 +6,7 @@ interface AScanAndPhaseCanvasProps {
   displacementHistoryMm: Float32Array | null;
   maxRangeM: number;
   peakRangeCm: number;
+  frameTick: number;
 }
 
 const WIDTH = 1260;
@@ -17,6 +18,7 @@ export function AScanAndPhaseCanvas({
   displacementHistoryMm,
   maxRangeM,
   peakRangeCm,
+  frameTick,
 }: AScanAndPhaseCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -131,7 +133,7 @@ export function AScanAndPhaseCanvas({
     ctx.fillStyle = '#94a3b8';
     ctx.textAlign = 'left';
     ctx.fillText('Sub-mm Phase Displacement @ Locked Bin (Breathing / Micro-Motion)', bX, HEIGHT - 6);
-  }, [rawEnvelope, mtiEnvelope, displacementHistoryMm, maxRangeM, peakRangeCm]);
+  }, [rawEnvelope, mtiEnvelope, displacementHistoryMm, maxRangeM, peakRangeCm, frameTick]);
 
   return (
     <div className="canvas-frame">

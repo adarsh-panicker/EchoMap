@@ -356,8 +356,9 @@ export class SonarProcessor {
   }
 
   private estimateBpm(buf: Float32Array, len: number, pingRateHz: number): number | null {
-    if (len < Math.floor(pingRateHz * 4)) return null;
-    // Count positive-going zero crossings after subtracting mean
+    // Need at least 6 seconds of phase history for reliable low-frequency BPM
+    if (len < Math.floor(pingRateHz * 6)) return null;
+
     let mean = 0;
     for (let i = 0; i < len; i++) mean += buf[i];
     mean /= len;
@@ -368,18 +369,33 @@ export class SonarProcessor {
       energy += d * d;
     }
     const rms = Math.sqrt(energy / len);
-    if (rms < 0.05) return null; // Too quiet / no periodic motion
+    if (rms < 0.08) return null; // Too quiet / no periodic motion
 
-    let crossings = 0;
-    for (let i = 1; i < len; i++) {
-      if (buf[i - 1] - mean <= 0 && buf[i] - mean > 0) {
-        crossings++;
+    // Spectral peak search in [6, 45] BPM (0.10 Hz .. 0.75 Hz)
+    let bestBpm = 0;
+    let bestPower = -1;
+    const minBpm = 6;
+    const maxBpm = 45;
+
+    for (let bpm = minBpm; bpm <= maxBpm; bpm += 0.5) {
+      const freqHz = bpm / 60;
+      const omega = (2 * Math.PI * freqHz) / pingRateHz;
+      let cosSum = 0;
+      let sinSum = 0;
+      for (let n = 0; n < len; n++) {
+        // Hann window to reduce spectral leakage
+        const w = 0.5 * (1 - Math.cos((2 * Math.PI * n) / (len - 1)));
+        const x = (buf[n] - mean) * w;
+        cosSum += x * Math.cos(omega * n);
+        sinSum += x * Math.sin(omega * n);
+      }
+      const power = cosSum * cosSum + sinSum * sinSum;
+      if (power > bestPower) {
+        bestPower = power;
+        bestBpm = bpm;
       }
     }
-    const durationSec = len / pingRateHz;
-    const hz = crossings / durationSec;
-    const bpm = hz * 60;
-    if (bpm < 6 || bpm > 60) return null;
-    return Math.round(bpm);
+
+    return bestPower > 0 ? Math.round(bestBpm) : null;
   }
 }

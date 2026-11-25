@@ -7,6 +7,7 @@ interface WaterfallCanvasProps {
   peakRangeCm: number;
   sensitivityDb: number;
   resetToken: number;
+  frameTick: number;
 }
 
 const WIDTH = 720;
@@ -22,6 +23,7 @@ export function WaterfallCanvas({
   peakRangeCm,
   sensitivityDb,
   resetToken,
+  frameTick,
 }: WaterfallCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const offscreenRef = useRef<HTMLCanvasElement | null>(null);
@@ -121,7 +123,7 @@ export function WaterfallCanvas({
     ctx.fillText('← Past', PAD_LEFT + 4, HEIGHT - 6);
     ctx.textAlign = 'right';
     ctx.fillText('Now →', PAD_LEFT + PLOT_W, HEIGHT - 6);
-  }, [envelope, maxRangeM, peakRangeCm, sensitivityDb]);
+  }, [envelope, maxRangeM, peakRangeCm, sensitivityDb, frameTick]);
 
   return (
     <div className="canvas-frame">
